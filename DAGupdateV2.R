@@ -36,9 +36,8 @@ packages("bnlearn")
 
 
 
-
 ### get model output given a breakpoint value
-model.out = function(xp, xc, tau){
+model.out = function(xp, xc, tau, stat){
   
   ### xp: the parent node
   ### xc the child node
@@ -51,7 +50,7 @@ model.out = function(xp, xc, tau){
     xp.1 = xp[which(xp < tau)]; xp.2 = xp
     xc.1 = xc[which(xp < tau)]; xc.2 = xc
     
-    mod.1 = NA; coef.1 = c(NA, NA); resids.1 = r.1 = rs.1 = 0
+    mod.1 = NA; coef.1 = c(NA, NA); resids.1 = numeric(0); r.1 = 0
     
     mod.2 = lm(xc ~ xp)
     coef.2 = coef(mod.2) 
@@ -70,7 +69,7 @@ model.out = function(xp, xc, tau){
     r.1 = cor(xp.1, xc.1)
     if(stat=="spearman") r.1 = cor(xp.1, xc.1, method = "spearman");  ### alternative stat: spearman
     
-    mod.2 = NA; coef.2 = c(NA, NA); resids.2 = r.2 = rs.2 = 0
+    mod.2 = NA; coef.2 = c(NA, NA); resids.2 = numeric(0); r.2 = 0
     
     
   }else{
@@ -92,17 +91,16 @@ model.out = function(xp, xc, tau){
     r.2 = cor(xp.2, xc.2)
     if(stat=="spearman") r.2 = cor(xp.2, xc.2, method = "spearman") ### alternative stat: spearman
     
-    resids = c(resids.1, resids.2)
   }
   
   n1 = length(xp.1)
   n2 = length(xp.2)
   
+  resids = c(resids.1, resids.2)
   ### total sum of residuals
-  Trss = sum(resids.1^2) + sum(resids.2^2)
+  Trss = sum(resids^2)
   
   if(is.na(r.1)){r.1 = 0}; if(is.na(r.2)){r.2 = 0};
-  if(is.na(rs.1)){rs.1 = 0}; if(is.na(rs.2)){rs.2 = 0};
   coef.1[is.na(coef.1)] = coef.2[is.na(coef.2)] = 0
   
   
@@ -141,8 +139,8 @@ findDirec = function(x, y, ntau = 100, tau.x = NULL, tau.y = NULL, stat = "pears
   if(is.null(tau.y)) tau.y = sapply(list(y), quantile, probs = round((0:ntau)/ntau, 3))
   
   ### get model output for each breakpoint candidate
-  m.x = sapply(tau.x, function(t){model.out(xp = x, xc = y, tau = t)}) ### with x being the parent node
-  m.y = sapply(tau.y, function(t){model.out(xp = y, xc = x, tau = t)}) ### with y being the parent node
+  m.x = sapply(tau.x, function(t){model.out(xp = x, xc = y, tau = t, stat = stat)}) ### with x being the parent node
+  m.y = sapply(tau.y, function(t){model.out(xp = y, xc = x, tau = t, stat = stat)}) ### with y being the parent node
   
   
   ### choose the optimal model
